@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #007bff;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+        #clearButton {
+            background-color: #dc3545;
+            margin-bottom: 20px;
+            margin-top: 20px
+        }
+
+        #clearButton:hover {
+            background-color: #c82333;
+        }
+
+        #disconnectButton {
+            background-color: #ffc107;
+        }
+
+        #disconnectButton:hover {
+            background-color: #e0a800;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        li {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        #connectionForm, #messageForm {
+            display: flex;
+            align-items: center;
+        }
+
+        #connectionForm input, #messageForm input {
+            width: 300px;
+        }
+
+        #connectionForm button, #messageForm button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Chat</h1>
+    <h2>Your ID: <span id="ws-id"></span></h2>
+    <form id="connectionForm">
+        <input type="text" id="topicInput" placeholder="Enter topic" required />
+        <button type="submit">Conectar</button>
+    </form>
+    <form id="messageForm">
+        <input type="text" id="messageText" placeholder="Enter message" required />
+        <button type="submit">Send</button>
+    </form>
+    <button id="disconnectButton">Disconnect</button>
+    <button id="clearButton">Clear</button>
+    <ul id='messages'></ul>
+    <script>
+        var ws;
+        var client_id = Date.now();
+        document.querySelector("#ws-id").textContent = client_id;
+
+        document.getElementById("connectionForm").onsubmit = function(event) {
+            event.preventDefault();
+            try {
+                var topic = document.getElementById("topicInput").value;
+                if (ws) {
+                    ws.close(); // Close existing connection if any
+                }
+                console.log(`ws://localhost:8000/ws?topic=${encodeURIComponent(topic)}`);
+                const encodedTopic = encodeURIComponent(topic);
+                ws = new WebSocket(`ws://localhost:8000/ws?topic=${encodedTopic}`);
+
+                ws.onmessage = function(event) {
+                    var messages = document.getElementById('messages');
+                    var message = document.createElement('li');
+                    var currentTime = new Date();
+                    var formattedTime = currentTime.toLocaleString();
+                    var content = document.createTextNode(`[${formattedTime}] -> ${event.data}`);
+                    message.appendChild(content);
+                    messages.appendChild(message);
+                };
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        document.getElementById("messageForm").onsubmit = function(event) {
+            var message = document.getElementById("messageText").value;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(message);
+            }
+            event.preventDefault();
+        };
+
+        document.getElementById("disconnectButton").onclick = function() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        };
+
+        document.getElementById("clearButton").onclick = function() {
+            var messages = document.getElementById('messages');
+            messages.innerHTML = '';
+        };
+    </script>
+</body>
+</html>
