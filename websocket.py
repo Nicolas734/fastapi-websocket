@@ -44,7 +44,6 @@ class ConnectionManager(metaclass=Singleton):
 
 class WebSocketConnection:
     def __init__(self, websocket: WebSocket = None) -> None:
-        # @NOTE: Adicionar futuramente uma estrutura que atenda o monitoramento para as empresas
         self._websocket = websocket
         self._connection_manager = ConnectionManager()
 
